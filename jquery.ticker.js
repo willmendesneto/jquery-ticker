@@ -16,6 +16,7 @@
         return this.each(function () {
             // Setup the ticker elements
             var tickerContainer = $(this);                     // Outer-most ticker container
+            var selectorOnHover;                               // Hover context element verificator
             var headlineContainer;                             // Inner headline container
             var headlineElements = tickerContainer.find('li'); // Original headline elements
             var headlines = [];                                // List of all the headlines
@@ -38,9 +39,26 @@
             tickerContainer.find('ul').after('<div></div>').remove();
             headlineContainer = tickerContainer.find('div');
 
+            //  Function used for target hover verification
+            function tickerContainerHoverContext() {
+                selectorOnHover = false;
+                if ($.trim(tickerContainer.context.id) !== '') {
+                    selectorOnHover = '#' + tickerContainer.context.id + ':hover';
+                } else if ($.trim(tickerContainer.context.className) !== '') {
+                    selectorOnHover = '.' + tickerContainer.context.className + ':hover';
+                }
+                return selectorOnHover;
+            }
+
+            function elOnHover() {
+                return !selectorOnHover ? selectorOnHover : $(selectorOnHover)[0] !== undefined;
+            }
+
             // Function to actually do the outer ticker, and handle pausing
             function outerTick() {
                 firstInnerTick = true;
+
+                tickerContainerHoverContext();
 
                 if (firstOuterTick) {
                     firstOuterTick = false;
@@ -49,7 +67,7 @@
                 }
 
                 outerTimeoutId = setTimeout(function () {
-                    if (opts.pauseOnHover && tickerContainer.is(':hover')) {
+                    if (opts.pauseOnHover && elOnHover()) {
                         // User is hovering over the ticker and pause on hover is enabled
                         clearTimeout(innerTimeoutId);
                         outerTick();
@@ -68,7 +86,7 @@
                     return;
                 }
 
-                if (opts.finishOnHover && opts.pauseOnHover && tickerContainer.is(':hover') && currentHeadlinePosition <= headlines[currentHeadline].length) {
+                if (opts.finishOnHover && opts.pauseOnHover && elOnHover() && currentHeadlinePosition <= headlines[currentHeadline].length) {
                     // Let's quickly complete the headline
                     // This is outside the timeout because we want to do this instantly without the pause
 
@@ -83,7 +101,7 @@
                 else {
                     // Handle as normal
                     innerTimeoutId = setTimeout(function () {
-                        if (opts.pauseOnHover && tickerContainer.is(':hover')) {
+                        if (opts.pauseOnHover && elOnHover()) {
                             // User is hovering over the ticker and pause on hover is enabled
                             clearTimeout(innerTimeoutId);
                             innerTick();
